@@ -76,8 +76,31 @@ void free_hashtable(hashtable_t *ht) {
   free(ht); // FIXME: must free all substructures!
 }
 
-/* TODO */
 void  ht_del(hashtable_t *ht, char *key) {
+  unsigned int idx = hash(key) % ht->size;
+  bucket_t *b = ht->buckets[idx];
+
+  // check if first item matches
+  if (strcmp(b->key, key) == 0) {
+    ht->buckets[idx] = b->next;
+    return;
+  }
+
+  // check through linked list for correct item
+  bucket_t *bprev = b;
+  b = b->next;
+
+  while (b) {
+    if (strcmp(b->key, key) == 0) {
+      // remove item
+      bprev->next = b->next;
+      free(b);
+      return;
+    }
+
+    bprev = b;
+    b = b->next;
+  }
 }
 
 void  ht_rehash(hashtable_t *ht, unsigned long newsize) {

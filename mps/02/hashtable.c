@@ -22,13 +22,28 @@ hashtable_t *make_hashtable(unsigned long size) {
 }
 
 void ht_put(hashtable_t *ht, char *key, void *val) {
-  /* FIXME: the current implementation doesn't update existing entries */
   unsigned int idx = hash(key) % ht->size;
   bucket_t *b = malloc(sizeof(bucket_t));
   b->key = key;
   b->val = val;
   b->next = ht->buckets[idx];
   ht->buckets[idx] = b;
+
+  // Look for existing item and remove it
+  bucket_t *bprev = b;
+  b = b->next;
+
+  while (b) {
+    if (strcmp(b->key, key) == 0) {
+      // remove item
+      bprev->next = b->next;
+      free(b);
+      return;
+    }
+
+    bprev = b;
+    b = b->next;
+  }
 }
 
 void *ht_get(hashtable_t *ht, char *key) {

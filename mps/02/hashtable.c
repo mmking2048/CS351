@@ -73,7 +73,20 @@ void ht_iter(hashtable_t *ht, int (*f)(char *, void *)) {
 }
 
 void free_hashtable(hashtable_t *ht) {
-  free(ht); // FIXME: must free all substructures!
+  bucket_t *tmp;
+  bucket_t *b;
+  unsigned long i;
+  for (i=0; i<ht->size; i++) {
+    b = ht->buckets[i];
+    while (b) {
+      tmp = b;
+      b = b->next;
+      free(tmp);
+    }
+  }
+
+  free(ht->buckets);
+  free(ht);
 }
 
 void  ht_del(hashtable_t *ht, char *key) {

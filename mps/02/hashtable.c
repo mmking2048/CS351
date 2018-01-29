@@ -22,9 +22,6 @@ hashtable_t *make_hashtable(unsigned long size) {
 }
 
 void ht_put(hashtable_t *ht, char *key, void *val) {
-  // remove value if exists
-  ht_del(ht, key);
-
   unsigned int idx = hash(key) % ht->size;
   bucket_t *b = malloc(sizeof(bucket_t));
   b->key = key;
@@ -80,7 +77,35 @@ void free_hashtable(hashtable_t *ht) {
 }
 
 void  ht_del(hashtable_t *ht, char *key) {
-  
+  unsigned int idx = hash(key) % ht->size;
+  bucket_t *b = ht->buckets[idx];
+
+  // check if first item matches
+  if (strcmp(b->key, key) == 0) {
+    free(b->key);
+    free(b->val);
+    free(b);
+    ht->buckets[idx] = b->next;
+    return;
+  }
+
+  // check through linked list for correct item
+  bucket_t *bprev = b;
+  b = b->next;
+
+  while (b) {
+    if (strcmp(b->key, key) == 0) {
+      // remove item
+      bprev->next = b->next;
+      free(b->key);
+      free(b->val);
+      free(b);
+      return;
+    }
+
+    bprev = b;
+    b = b->next;
+  }
 }
 
 void  ht_rehash(hashtable_t *ht, unsigned long newsize) {

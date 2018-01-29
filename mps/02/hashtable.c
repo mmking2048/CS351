@@ -140,7 +140,19 @@ void  ht_rehash(hashtable_t *ht, unsigned long newsize) {
   }
 
   // delete old hashtable
-  free_hashtable(ht);
+  bucket_t *tmp;
+
+  for (i=0; i<ht->size; i++) {
+    b = ht->buckets[i];
+    while (b) {
+      tmp = b;
+      b = b->next;
+      free(tmp);
+    }
+  }
+
+  free(ht->buckets);
+  free(ht);
 
   // pointer magic
   *ht = *new_ht;

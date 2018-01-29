@@ -37,6 +37,8 @@ void ht_put(hashtable_t *ht, char *key, void *val) {
     if (strcmp(b->key, key) == 0) {
       // remove item
       bprev->next = b->next;
+      free(b->key);
+      free(b->val);
       free(b);
       return;
     }
@@ -75,12 +77,15 @@ void ht_iter(hashtable_t *ht, int (*f)(char *, void *)) {
 void free_hashtable(hashtable_t *ht) {
   bucket_t *tmp;
   bucket_t *b;
+
   unsigned long i;
   for (i=0; i<ht->size; i++) {
     b = ht->buckets[i];
     while (b) {
       tmp = b;
       b = b->next;
+      free(tmp->key);
+      free(tmp->val);
       free(tmp);
     }
   }
@@ -95,6 +100,9 @@ void  ht_del(hashtable_t *ht, char *key) {
 
   // check if first item matches
   if (strcmp(b->key, key) == 0) {
+    free(b->key);
+    free(b->val);
+    free(b);
     ht->buckets[idx] = b->next;
     return;
   }
@@ -107,6 +115,8 @@ void  ht_del(hashtable_t *ht, char *key) {
     if (strcmp(b->key, key) == 0) {
       // remove item
       bprev->next = b->next;
+      free(b->key);
+      free(b->val);
       free(b);
       return;
     }

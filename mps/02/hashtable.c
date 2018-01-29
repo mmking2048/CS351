@@ -144,4 +144,7 @@ void  ht_rehash(hashtable_t *ht, unsigned long newsize) {
 
   // pointer magic
   *ht = *new_ht;
+  
+  // free pointers
+  free(new_ht);
 }

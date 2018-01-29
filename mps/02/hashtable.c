@@ -28,6 +28,22 @@ void ht_put(hashtable_t *ht, char *key, void *val) {
   b->val = val;
   b->next = ht->buckets[idx];
   ht->buckets[idx] = b;
+
+  // Look for existing item and remove it
+  bucket_t *bprev = b;
+  b = b->next;
+
+  while (b) {
+    if (strcmp(b->key, key) == 0) {
+      bprev->next = b->next;
+      free(b->key);
+      free(b->val);
+      free(b);
+      return;
+    }
+    bprev = b;
+    b = b->next;
+  }
 }
 
 void *ht_get(hashtable_t *ht, char *key) {

@@ -152,7 +152,6 @@ void  ht_rehash(hashtable_t *ht, unsigned long newsize) {
   }
 
   free(ht->buckets);
-  free(ht);
 
   // pointer magic
   *ht = *new_ht;

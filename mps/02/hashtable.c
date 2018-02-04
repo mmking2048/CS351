@@ -98,10 +98,10 @@ void  ht_del(hashtable_t *ht, char *key) {
 
   // check if first item matches
   if (strcmp(b->key, key) == 0) {
+    ht->buckets[idx] = b->next;
     free(b->key);
     free(b->val);
     free(b);
-    ht->buckets[idx] = b->next;
     return;
   }
 

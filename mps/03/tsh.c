@@ -169,12 +169,23 @@ void eval(char *cmdline)
   char *argv[MAXARGS];
 
   bg = parseline(cmdline, argv);
+
+  if (builtin_cmd(argv)) {
+    // this is a built in command, don't need to do anything
+    return;
+  }
+
   if (bg) {
     printf("background job requested\n");
   }
-  for (i=0; argv[i] != NULL; i++) {
-    printf("argv[%d]=%s%s", i, argv[i], (argv[i+1]==NULL)?"\n":", ");
-  }
+
+  if (fork() == 0) {
+    if (execvp(argv[0], argv) < 0) {
+      printf("Command not found\n");
+      exit(0);
+    }
+  }  
+
   return;
 }
 

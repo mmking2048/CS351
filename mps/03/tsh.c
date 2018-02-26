@@ -83,6 +83,8 @@ void app_error(char *msg);
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 
+pid_t fg_pid;
+
 /*
  * main - The shell's main routine 
  */
@@ -165,8 +167,9 @@ void eval(char *cmdline)
 {
   /* the following code demonstrates how to use parseline --- you'll 
    * want to replace most of it (at least the print statements). */
-  int i, bg;
+  int bg;
   char *argv[MAXARGS];
+  pid_t pid;
 
   bg = parseline(cmdline, argv);
 
@@ -174,17 +177,23 @@ void eval(char *cmdline)
     // this is a built in command, don't need to do anything
     return;
   }
-
-  if (bg) {
-    printf("background job requested\n");
-  }
-
-  if (fork() == 0) {
+  
+  // TODO: mask stuff here
+  if ((pid = fork()) == 0) {
+    setpgrp();
     if (execvp(argv[0], argv) < 0) {
       printf("Command not found\n");
       exit(0);
     }
-  }  
+  }
+
+  if (!bg) {
+    fg_pid = pid;
+    // TODO: mask stuff here
+
+    while (fg_pid != -1)
+      sleep(1);
+  }
 
   return;
 }
@@ -284,6 +293,13 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
+  pid_t pid;
+
+  while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
+    if (pid == fg_pid)
+      fg_pid = -1;
+  }
+
   return;
 }
 

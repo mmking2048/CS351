@@ -171,6 +171,10 @@ void eval(char *cmdline)
   char *argv[MAXARGS];
   pid_t pid;
 
+  sigset_t mask;
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGCHLD);
+
   bg = parseline(cmdline, argv);
 
   if (builtin_cmd(argv)) {
@@ -178,9 +182,14 @@ void eval(char *cmdline)
     return;
   }
   
-  // TODO: mask stuff here
+  sigprocmask(SIG_BLOCK, &mask, NULL);
+
   if ((pid = fork()) == 0) {
     setpgrp();
+    
+    // unblock signals in child
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
     if (execvp(argv[0], argv) < 0) {
       printf("Command not found\n");
       exit(0);
@@ -189,7 +198,7 @@ void eval(char *cmdline)
 
   if (!bg) {
     fg_pid = pid;
-    // TODO: mask stuff here
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
     while (fg_pid != -1)
       sleep(1);

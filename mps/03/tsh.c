@@ -298,11 +298,7 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-  waitpid(pid, NULL, 0);
-
-  // remove job from list
-  deletejob(jobs, pid);
-
+  while (fgpid(jobs)) ;
   return;
 }
 

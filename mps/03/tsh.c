@@ -187,7 +187,9 @@ void eval(char *cmdline)
   sigprocmask(SIG_BLOCK, &mask, NULL);
 
   if ((pid = fork()) == 0) {
-    setpgrp();
+    //setpgrp();
+    setpgid(0, 0);
+
     // unblock child SIGCHLD
     sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
@@ -197,13 +199,12 @@ void eval(char *cmdline)
     }
   }
 
+  // unblock parent SIGCHLD
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
   if (!bg) {
     // add to jobs list
     addjob(jobs, pid, FG, cmdline);
-
-    // unblock parent SIGCHLD
-    sigprocmask(SIG_UNBLOCK, &mask, NULL);
-
     waitfg(pid);
   } else {
     // add to jobs list
@@ -347,6 +348,13 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
+  pid_t pid = fgpid(jobs);
+
+  if (!pid) {
+    // send SIGINT to foreground job
+    kill(-pid, SIGINT);
+  }
+
   return;
 }
 
@@ -357,6 +365,13 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+  pid_t pid = fgpid(jobs);
+
+  if (!pid) {
+    // send SIGTSTP to foreground job
+    kill(-pid, SIGTSTP);
+  }
+
   return;
 }
 

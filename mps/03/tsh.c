@@ -271,19 +271,19 @@ int builtin_cmd(char **argv)
 {
   char *cmd = argv[0];
  
-  if (strcmp(cmd, "fg") || strcmp(cmd, "bg")) {
+  if (!strcmp(cmd, "fg") || !strcmp(cmd, "bg")) {
     do_bgfg(argv);
-    //return 1;
+    return 1;
   }
  
-  if (strcmp(cmd, "quit")) {
+  if (!strcmp(cmd, "quit")) {
     // TODO: quit
-    //return 1;
+    return 1;
   }
 
-  if (strcmp(cmd, "jobs")) {
+  if (!strcmp(cmd, "jobs")) {
     // TODO: list jobs
-    //return 1;
+    return 1;
   }
 
   return 0;     /* not a builtin command */
@@ -302,7 +302,7 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-  //waitpid(pid, NULL, 0);
+  waitpid(pid, NULL, 0);
   return;
 }
 

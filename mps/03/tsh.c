@@ -171,6 +171,11 @@ void eval(char *cmdline)
 
   bg = parseline(cmdline, argv);
 
+  if (*argv == NULL) {
+    // nothing was inputted, return
+    return;
+  }
+
   if (builtin_cmd(argv)) {
     // this is a built in command, don't need to do anything
     return;
@@ -294,6 +299,10 @@ void do_bgfg(char **argv)
 void waitfg(pid_t pid)
 {
   waitpid(pid, NULL, 0);
+
+  // remove job from list
+  deletejob(jobs, pid);
+
   return;
 }
 

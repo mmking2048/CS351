@@ -268,7 +268,7 @@ int builtin_cmd(char **argv)
   }
  
   if (!strcmp(cmd, "quit")) {
-    // TODO: quit
+    exit(0);
     return 1;
   }
 

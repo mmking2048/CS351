@@ -83,8 +83,6 @@ void app_error(char *msg);
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 
-pid_t fg_pid;
-
 /*
  * main - The shell's main routine 
  */
@@ -171,24 +169,15 @@ void eval(char *cmdline)
   char *argv[MAXARGS];
   pid_t pid;
 
-  sigset_t mask;
-  sigemptyset(&mask);
-  sigaddset(&mask, SIGCHLD);
-
   bg = parseline(cmdline, argv);
 
   if (builtin_cmd(argv)) {
     // this is a built in command, don't need to do anything
     return;
   }
-  
-  sigprocmask(SIG_BLOCK, &mask, NULL);
 
   if ((pid = fork()) == 0) {
     setpgrp();
-    
-    // unblock signals in child
-    sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
     if (execvp(argv[0], argv) < 0) {
       printf("Command not found\n");
@@ -197,10 +186,12 @@ void eval(char *cmdline)
   }
 
   if (!bg) {
-    fg_pid = pid;
-    sigprocmask(SIG_UNBLOCK, &mask, NULL);
-
+    // add to jobs list
+    addjob(jobs, pid, FG, cmdline);
     waitfg(pid);
+  } else {
+    // add to jobs list
+    addjob(jobs, pid, BG, cmdline);
   }
 
   return;
@@ -282,7 +273,7 @@ int builtin_cmd(char **argv)
   }
 
   if (!strcmp(cmd, "jobs")) {
-    // TODO: list jobs
+    listjobs(jobs);
     return 1;
   }
 
@@ -319,13 +310,6 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
-  pid_t pid;
-
-  while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
-    if (pid == fg_pid)
-      fg_pid = -1;
-  }
-
   return;
 }
 

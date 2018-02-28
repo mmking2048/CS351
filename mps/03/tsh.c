@@ -163,11 +163,10 @@ int main(int argc, char **argv)
  */
 void eval(char *cmdline) 
 {
-  /* the following code demonstrates how to use parseline --- you'll 
-   * want to replace most of it (at least the print statements). */
   int bg;
   char *argv[MAXARGS];
   pid_t pid;
+  sigset_t mask;
 
   bg = parseline(cmdline, argv);
 
@@ -181,8 +180,16 @@ void eval(char *cmdline)
     return;
   }
 
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGCHLD);
+
+  // block SIGCHLD
+  sigprocmask(SIG_BLOCK, &mask, NULL);
+
   if ((pid = fork()) == 0) {
     setpgrp();
+    // unblock child SIGCHLD
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
     if (execvp(argv[0], argv) < 0) {
       printf("Command not found\n");
@@ -193,6 +200,10 @@ void eval(char *cmdline)
   if (!bg) {
     // add to jobs list
     addjob(jobs, pid, FG, cmdline);
+
+    // unblock parent SIGCHLD
+    sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
     waitfg(pid);
   } else {
     // add to jobs list
@@ -301,7 +312,7 @@ void waitfg(pid_t pid)
   while (fgpid(jobs)) {
     sleep(1);
   }
-  
+
   return;
 }
 

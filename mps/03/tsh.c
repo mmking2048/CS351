@@ -310,6 +310,14 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
+  pid_t pid;
+
+  // reap completed
+  while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
+    // remove children from jobs list
+    deletejob(jobs, pid);
+  }
+
   return;
 }
 

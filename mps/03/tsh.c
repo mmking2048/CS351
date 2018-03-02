@@ -350,7 +350,7 @@ void sigint_handler(int sig)
 {
   pid_t pid = fgpid(jobs);
 
-  if (!pid) {
+  if (pid) {
     // send SIGINT to foreground job
     kill(-pid, SIGINT);
   }
@@ -367,7 +367,7 @@ void sigtstp_handler(int sig)
 {
   pid_t pid = fgpid(jobs);
 
-  if (!pid) {
+  if (pid) {
     // send SIGTSTP to foreground job
     kill(-pid, SIGTSTP);
   }

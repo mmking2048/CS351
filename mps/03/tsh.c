@@ -305,24 +305,41 @@ void do_bgfg(char **argv)
   char *cmd = argv[0];
   char *id = argv[1];
   int jid;
+  pid_t pid;
   struct job_t* job;
 
-  // TODO: verify argv has at least two elements
+  if (id == NULL) {
+    // no pid or jid
+    printf("%s command requires PID or %%jobid argument\n", cmd);
+    return;
+  }
 
   if (id[0] == '%') {
     // this is a jid
     strcpy(id, &id[1]);
-    jid = atoi(id);
+    if (!(jid = atoi(id))) {
+      printf("%s: argument must be a PID or %%jobid\n", cmd);
+      return;
+    }
+
+    job = getjobjid(jobs, jid);
+
+    if (job == NULL) {
+      printf("%s: No such job\n", argv[1]);
+      return;
+    }
   } else {
-    jid = pid2jid(atoi(id));
-  }
+    if (!(pid = atoi(id))) {
+      printf("%s: argument must be a PID or %%jobid\n", cmd);
+      return;
+    }
+    
+    job = getjobpid(jobs, pid);
 
-  job = getjobjid(jobs, jid);
-
-  if (job == NULL) {
-    // job not found
-    printf("%s: No such job\n", argv[1]);
-    return;
+    if (job == NULL) {
+      printf("(%d): No such process\n", pid);
+      return;
+    }
   }
 
   kill(-(job->pid), SIGCONT);

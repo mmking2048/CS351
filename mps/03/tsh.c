@@ -302,6 +302,37 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+  char *cmd = argv[0];
+  char *id = argv[1];
+  int jid;
+  struct job_t* job;
+
+  if (id[0] == '%') {
+    // this is a jid
+    strcpy(id, &id[1]);
+    jid = atoi(id);
+  } else {
+    jid = pid2jid(atoi(id));
+  }
+
+  job = getjobjid(jobs, jid);
+  kill(job->pid, SIGCONT);
+
+  if (job == NULL) {
+    // job not found
+    return;
+  }
+
+  if (!strcmp(cmd, "fg")) {
+    // execute in foreground
+    printf("foreground");
+  }
+
+  if (!strcmp(cmd, "bg")) {
+    printf("background");
+    // execute in background
+  }
+  
   return;
 }
 

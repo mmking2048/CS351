@@ -167,6 +167,7 @@ void eval(char *cmdline)
   char *argv[MAXARGS];
   pid_t pid;
   sigset_t mask;
+  struct job_t* job;
 
   bg = parseline(cmdline, argv);
 
@@ -202,12 +203,12 @@ void eval(char *cmdline)
     sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
   if (!bg) {
-    // add to jobs list
     addjob(jobs, pid, FG, cmdline);
     waitfg(pid);
   } else {
-    // add to jobs list
     addjob(jobs, pid, BG, cmdline);
+    job = getjobpid(jobs, pid);
+    printf("[%d] (%d) %s", job->jid, job->pid, cmdline);
   }
 
   return;
@@ -317,7 +318,7 @@ void do_bgfg(char **argv)
   }
 
   job = getjobjid(jobs, jid);
-  kill(job->pid, SIGCONT);
+  kill(-(job->pid), SIGCONT);
 
   if (job == NULL) {
     // job not found

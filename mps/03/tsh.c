@@ -318,12 +318,14 @@ void do_bgfg(char **argv)
   }
 
   job = getjobjid(jobs, jid);
-  kill(-(job->pid), SIGCONT);
 
   if (job == NULL) {
     // job not found
+    printf("%s: No such job", argv[1]);
     return;
   }
+
+  kill(-(job->pid), SIGCONT);
 
   if (!strcmp(cmd, "fg")) {
     job->state = FG;
@@ -331,6 +333,7 @@ void do_bgfg(char **argv)
   }
 
   if (!strcmp(cmd, "bg")) {
+    printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
     job->state = BG;
   }
   
@@ -364,14 +367,21 @@ void sigchld_handler(int sig)
 {
   pid_t pid;
   int status;
+  struct job_t *job;
 
   // reap completed
   while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
-    if (WIFSTOPPED(status)) {
-      // SIGTSTP: update jobs list
-      getjobpid(jobs, pid)->state = ST;
-    } else {
-      // remove children from jobs list
+    job = getjobpid(jobs, pid);
+    
+    if (WIFSIGNALED(status)) {
+      printf("Job [%d] (%d) terminated by signal %d\n", job->jid, job->pid, WTERMSIG(status));
+      deletejob(jobs, pid);
+    } else if (WIFSTOPPED(status)) {
+      printf("Job [%d] (%d) stopped by signal %d\n", job->jid, job->pid, WSTOPSIG(status));
+      job->state = ST;
+    } else if (WIFCONTINUED(status)) {
+      printf("Continued");
+    } else if(WIFEXITED(status)) {
       deletejob(jobs, pid);
     }
   }

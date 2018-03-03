@@ -325,7 +325,7 @@ void do_bgfg(char **argv)
     job = getjobjid(jobs, jid);
 
     if (job == NULL) {
-      printf("%s: No such job\n", argv[1]);
+      printf("%%%s: No such job\n", argv[1]);
       return;
     }
   } else {

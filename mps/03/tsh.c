@@ -331,11 +331,17 @@ void waitfg(pid_t pid)
 void sigchld_handler(int sig) 
 {
   pid_t pid;
+  int status;
 
   // reap completed
-  while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
-    // remove children from jobs list
-    deletejob(jobs, pid);
+  while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
+    if (WIFSTOPPED(status)) {
+      // SIGTSTP: update jobs list
+      getjobpid(jobs, pid)->state = ST;
+    } else {
+      // remove children from jobs list
+      deletejob(jobs, pid);
+    }
   }
 
   return;

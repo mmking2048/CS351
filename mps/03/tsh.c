@@ -187,8 +187,7 @@ void eval(char *cmdline)
   sigprocmask(SIG_BLOCK, &mask, NULL);
 
   if ((pid = fork()) == 0) {
-    //setpgrp();
-    setpgid(0, 0);
+    setpgrp();
 
     // unblock child SIGCHLD
     sigprocmask(SIG_UNBLOCK, &mask, NULL);
@@ -307,6 +306,8 @@ void do_bgfg(char **argv)
   int jid;
   struct job_t* job;
 
+  // TODO: verify argv has at least two elements
+
   if (id[0] == '%') {
     // this is a jid
     strcpy(id, &id[1]);
@@ -324,13 +325,12 @@ void do_bgfg(char **argv)
   }
 
   if (!strcmp(cmd, "fg")) {
-    // execute in foreground
-    printf("foreground");
+    job->state = FG;
+    waitfg(job->pid);
   }
 
   if (!strcmp(cmd, "bg")) {
-    printf("background");
-    // execute in background
+    job->state = BG;
   }
   
   return;

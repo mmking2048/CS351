@@ -321,7 +321,7 @@ void do_bgfg(char **argv)
 
   if (job == NULL) {
     // job not found
-    printf("%s: No such job", argv[1]);
+    printf("%s: No such job\n", argv[1]);
     return;
   }
 
@@ -379,8 +379,6 @@ void sigchld_handler(int sig)
     } else if (WIFSTOPPED(status)) {
       printf("Job [%d] (%d) stopped by signal %d\n", job->jid, job->pid, WSTOPSIG(status));
       job->state = ST;
-    } else if (WIFCONTINUED(status)) {
-      printf("Continued");
     } else if(WIFEXITED(status)) {
       deletejob(jobs, pid);
     }

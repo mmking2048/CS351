@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <getopt.h>
 #include "math.h"
 #include "cachelab.h"
@@ -13,12 +14,12 @@ typedef struct {
 
 typedef struct {
     int num_lines;
-    line_t **lines;
+    line_t *lines;
 } cacheset_t;
 
 typedef struct {
     int num_sets;
-    cacheset_t **sets;
+    cacheset_t *sets;
 } cache_t;
 
 int verbose = 0;
@@ -70,24 +71,21 @@ void process_input(int argc, char **argv) {
             break;
         }
     }
+
+    if (c == 0 || e == 0 || b == 0 || !strcmp(t, "")) {
+        usage();
+    }
 }
 
 cache_t *make_cache(int s, int e, int b) {
     cache_t *cache = malloc(sizeof(cache_t *));
 
     cache->num_sets = pow(2, s);
-    cache->sets = calloc(sizeof(cacheset_t *), cache->num_sets);
+    cache->sets = malloc(sizeof(cacheset_t) * cache->num_sets);
     
     for (int i = 0; i < cache->num_sets; i++) {
-        cacheset_t *set = malloc(sizeof(cacheset_t *));
-        cache->sets[i] = set;
-        set->num_lines = e;
-        set->lines = calloc(sizeof(line_t *), e);
-
-        for (int j = 0; j < e; j++) {
-            line_t *line = malloc(sizeof(line_t *));
-            set->lines[j] = line;
-        }
+        cache->sets[i].num_lines = e;
+        cache->sets[i].lines = malloc(sizeof(line_t) * e);
     }
 
     return cache;

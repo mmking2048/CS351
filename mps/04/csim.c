@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,9 +41,47 @@ int main(int argc, char **argv)
     // initialize and allocate cache
     cache = make_cache(s, e, b);
 
-    // process stuff
+    // read file
+    FILE *file;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    char *t1, *t2;
 
+    file = fopen(t, "r");
+    if (file) {
+        while ((read = getline(&line, &len, file)) != -1){
+            printf("%s\n", line);
 
+            while((t1 = strsep(&line, " "))) {
+                if (!strcmp(t1, "")) {
+                    // empty string
+                    continue;
+                } else if (strstr(t1, "I") != NULL) {
+                    // do nothing
+                    break;
+                } else if (strstr(t1, "L") != NULL) {
+                    printf("load: %s\n", t1);
+                } else if (strstr(t1, "S") != NULL) {
+                    printf("store: %s\n", t1);
+                } else if (strstr(t1, "M") != NULL) {
+                    printf("modify: %s\n", t1);
+                } else {
+                    printf("address & stuff: %s\n", t1);
+                    while ((t2 = strsep(&t1, ","))) {
+                        // address
+                        printf("address & stuff: %s\n", t2);
+                    }
+                }
+            }
+        }
+        fclose(file);
+    }
+
+    if (line)
+        free(line);
+
+    // print summary
     printSummary(hit_count, miss_count, eviction_count);
     return 0;
 }

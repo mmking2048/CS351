@@ -3,28 +3,21 @@
 #include "math.h"
 #include "cachelab.h"
 
-typedef struct block block_t;
-typedef struct line line_t;
-typedef struct cacheset cacheset_t;
-typedef struct cache cache_t;
-
-cache_t *cache;
-
-struct line {
+typedef struct {
     int index;
     int valid;
     int tag;
-};
+} line_t;
 
-struct cacheset{
-    int num_lines;
+typedef struct {
     line_t *lines;
-};
+} cacheset_t;
 
-struct cache {
-    int num_sets;
+typedef struct {
     cacheset_t *sets;
-};
+} cache_t;
+
+cache_t *cache;
 
 cache_t *make_cache(int s, int e, int b);
 
@@ -40,16 +33,19 @@ int main(int argc, char **argv)
 }
 
 cache_t *make_cache(int s, int e, int b) {
-    // allocate cache
     cache_t *cache = malloc(sizeof(cache_t));
 
-    // allocate cache sets
-    cache->sets = malloc(sizeof(cacheset_t *) * pow(2, s));
+    cache->sets = calloc(sizeof(cacheset_t *), pow(2, s));
     
     for (int i = 0; i < pow(2, s); i++) {
-        // allocate lines
-        cacheset_t *set = cache->sets;
-        set->lines = malloc(sizeof(line_t *) * e);
+        cacheset_t *set = malloc(sizeof(cacheset_t *));
+        cache->sets[i] = *set;
+        set->lines = calloc(sizeof(line_t *), e);
+
+        for (int j = 0; j < e; j++) {
+            line_t *line = malloc(sizeof(line_t *));
+            *set[j].lines = *line;
+        }
     }
 
     return cache;

@@ -51,23 +51,25 @@ int main(int argc, char **argv)
     file = fopen(t, "r");
     if (file) {
         while ((read = getline(&line, &len, file)) != -1){
-            printf("%s\n", line);
+            if (line[0] != ' ') {
+                // instruction load
+                // don't do anything
+                continue;
+            }
+
+            strcpy(line, &line[1]);
+            
+            if (verbose)
+                printf("%s ", line);
 
             while((t1 = strsep(&line, " "))) {
-                if (!strcmp(t1, "")) {
-                    // empty string
-                    continue;
-                } else if (strstr(t1, "I") != NULL) {
-                    // do nothing
-                    break;
-                } else if (strstr(t1, "L") != NULL) {
+                if (strstr(t1, "L") != NULL) {
                     printf("load: %s\n", t1);
                 } else if (strstr(t1, "S") != NULL) {
                     printf("store: %s\n", t1);
                 } else if (strstr(t1, "M") != NULL) {
                     printf("modify: %s\n", t1);
                 } else {
-                    printf("address & stuff: %s\n", t1);
                     while ((t2 = strsep(&t1, ","))) {
                         // address
                         printf("address & stuff: %s\n", t2);

@@ -10,11 +10,13 @@ typedef struct {
 } line_t;
 
 typedef struct {
-    line_t *lines;
+    int num_lines;
+    line_t **lines;
 } cacheset_t;
 
 typedef struct {
-    cacheset_t *sets;
+    int num_sets;
+    cacheset_t **sets;
 } cache_t;
 
 cache_t *cache;
@@ -33,18 +35,20 @@ int main(int argc, char **argv)
 }
 
 cache_t *make_cache(int s, int e, int b) {
-    cache_t *cache = malloc(sizeof(cache_t));
+    cache_t *cache = malloc(sizeof(cache_t *));
 
-    cache->sets = calloc(sizeof(cacheset_t *), pow(2, s));
+    cache->num_sets = pow(2, s);
+    cache->sets = calloc(sizeof(cacheset_t *), cache->num_sets);
     
-    for (int i = 0; i < pow(2, s); i++) {
+    for (int i = 0; i < cache->num_sets; i++) {
         cacheset_t *set = malloc(sizeof(cacheset_t *));
-        cache->sets[i] = *set;
+        cache->sets[i] = set;
+        set->num_lines = e;
         set->lines = calloc(sizeof(line_t *), e);
 
         for (int j = 0; j < e; j++) {
             line_t *line = malloc(sizeof(line_t *));
-            *set[j].lines = *line;
+            set->lines[j] = line;
         }
     }
 

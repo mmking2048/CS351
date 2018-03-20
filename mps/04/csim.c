@@ -7,9 +7,9 @@
 #include "cachelab.h"
 
 typedef struct {
-    int index;
     int valid;
-    int tag;
+    long tag;
+    int lru;
 } line_t;
 
 typedef struct {
@@ -33,12 +33,17 @@ void usage();
 
 int main(int argc, char **argv)
 {
+    int hit_count = 0, miss_count = 0, eviction_count = 0;
+
     process_input(argc, argv);
 
     // initialize and allocate cache
-    cache = make_cache(1, 1, 1);
+    cache = make_cache(s, e, b);
 
-    printSummary(0, 0, 0);
+    // process stuff
+
+
+    printSummary(hit_count, miss_count, eviction_count);
     return 0;
 }
 
@@ -73,6 +78,7 @@ void process_input(int argc, char **argv) {
     }
 
     if (c == 0 || e == 0 || b == 0 || !strcmp(t, "")) {
+        // invalid inputs
         usage();
     }
 }

@@ -45,6 +45,7 @@ int main(int argc, char **argv)
     // read file
     FILE *file;
     char *line = NULL;
+    
     size_t len = 0;
     ssize_t read;
     char *t1, *t2;
@@ -58,22 +59,27 @@ int main(int argc, char **argv)
                 continue;
             }
 
-            strcpy(line, &line[1]);
-            
-            if (verbose)
-                printf("%s ", line);
+            memmove(line, line+1, strlen(line));
+            char *line2 = line;
 
-            while((t1 = strsep(&line, " "))) {
+            if (verbose)
+                printf("%s ", line2);
+
+            while((t1 = strsep(&line2, " "))) {
                 if (strstr(t1, "L") != NULL) {
-                    printf("load: %s\n", t1);
+                    if (verbose)
+                        printf("load: %s\n", t1);
                 } else if (strstr(t1, "S") != NULL) {
-                    printf("store: %s\n", t1);
+                    if (verbose)
+                        printf("store: %s\n", t1);
                 } else if (strstr(t1, "M") != NULL) {
-                    printf("modify: %s\n", t1);
+                    if (verbose)
+                        printf("modify: %s\n", t1);
                 } else {
                     while ((t2 = strsep(&t1, ","))) {
                         // address
-                        printf("address & stuff: %s\n", t2);
+                        if (verbose)
+                            printf("address & stuff: %s\n", t2);
                     }
                 }
             }

@@ -30,6 +30,7 @@ cache_t *cache;
 
 cache_t *make_cache(int s, int e, int b);
 void process_input(int argc, char **argv);
+void free_cache(cache_t* cache);
 void usage();
 
 int main(int argc, char **argv)
@@ -85,6 +86,8 @@ int main(int argc, char **argv)
 
     // print summary
     printSummary(hit_count, miss_count, eviction_count);
+
+    free_cache(cache);
     return 0;
 }
 
@@ -136,6 +139,15 @@ cache_t *make_cache(int s, int e, int b) {
     }
 
     return cache;
+}
+
+void free_cache(cache_t *cache) {
+    for (int i = 0; i < cache->num_sets; i++) {
+        free(cache->sets[i].lines);
+    }
+
+    free(cache->sets);
+    free(cache);
 }
 
 void usage(void) 

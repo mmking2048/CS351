@@ -30,6 +30,7 @@ cache_t *cache;
 
 cache_t *make_cache(int s, int e, int b);
 void process_input(int argc, char **argv);
+int check_hit(unsigned address);
 void usage();
 
 int main(int argc, char **argv)
@@ -66,13 +67,18 @@ int main(int argc, char **argv)
 
             if ((sscanf(line, " %c %u,%d", &instr, &address, &size)) == 3) {
                 if (instr == 'L') {
-                    printf("load\n");
+                    if (check_hit(address)) {
+                        hit_count++;
+                    } else {
+                        miss_count++;
+                    }
                 } else if (instr == 'S') {
                     printf("store\n");
                 } else if (instr == 'M') {
                     printf("modify\n");
                 }
 
+                check_hit(address);
                 printf("%s", line);
             }
         }
@@ -137,14 +143,20 @@ cache_t *make_cache(int s, int e, int b) {
     return cache;
 }
 
-int check_hit(char *address) {
-//    int tagSize = 64 - s - b;
-//    unsigned addr = strtoul(address, NULL, 16);
-//    unsigned tag = addr >> (64 - tagSize);
-//    unsigned block = addr << t >> (tagSize + b);
+int check_hit(unsigned address) {
+    int tagSize = 64 - s - b;
+    unsigned tag = address >> (64 - tagSize);
+    unsigned setIndex = address << tagSize >> (tagSize + b);
+
+    cacheset_t set =  cache->sets[setIndex];
+    for (int i = 0; i < set.num_lines; i++) {
+        line_t line = set.lines[i];
+        if (line.valid == 1 && line.tag == tag) {
+            return 1;
+        }
+    }
 
     return 0;
-//    return cache->sets[index].lines[block].tag == tag;
 }
 
 void usage(void) 

@@ -46,7 +46,9 @@ int main(int argc, char **argv)
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
-    char *t1, *t2;
+    char instr;
+    unsigned address;
+    int size;
 
     file = fopen(t, "r");
     if (file) {
@@ -62,19 +64,16 @@ int main(int argc, char **argv)
             if (verbose)
                 printf("%s ", line);
 
-            while((t1 = strsep(&line, " "))) {
-                if (strstr(t1, "L") != NULL) {
-                    printf("load: %s\n", t1);
-                } else if (strstr(t1, "S") != NULL) {
-                    printf("store: %s\n", t1);
-                } else if (strstr(t1, "M") != NULL) {
-                    printf("modify: %s\n", t1);
-                } else {
-                    while ((t2 = strsep(&t1, ","))) {
-                        // address
-                        printf("address & stuff: %s\n", t2);
-                    }
+            if ((sscanf(line, " %c %u,%d", &instr, &address, &size)) == 3) {
+                if (instr == 'L') {
+                    printf("load\n");
+                } else if (instr == 'S') {
+                    printf("store\n");
+                } else if (instr == 'M') {
+                    printf("modify\n");
                 }
+
+                printf("%s", line);
             }
         }
         fclose(file);
@@ -136,6 +135,16 @@ cache_t *make_cache(int s, int e, int b) {
     }
 
     return cache;
+}
+
+int check_hit(char *address) {
+//    int tagSize = 64 - s - b;
+//    unsigned addr = strtoul(address, NULL, 16);
+//    unsigned tag = addr >> (64 - tagSize);
+//    unsigned block = addr << t >> (tagSize + b);
+
+    return 0;
+//    return cache->sets[index].lines[block].tag == tag;
 }
 
 void usage(void) 

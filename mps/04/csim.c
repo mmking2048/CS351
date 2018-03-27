@@ -31,6 +31,7 @@ cache_t *cache;
 cache_t *make_cache(int s, int e, int b);
 void process_input(int argc, char **argv);
 void free_cache(cache_t* cache);
+int check_hit(unsigned address);
 void usage();
 
 int main(int argc, char **argv)
@@ -48,7 +49,9 @@ int main(int argc, char **argv)
     
     size_t len = 0;
     ssize_t read;
-    char *t1, *t2;
+    char instr;
+    unsigned address;
+    int size;
 
     file = fopen(t, "r");
     if (file) {
@@ -65,23 +68,21 @@ int main(int argc, char **argv)
             if (verbose)
                 printf("%s ", line2);
 
-            while((t1 = strsep(&line2, " "))) {
-                if (strstr(t1, "L") != NULL) {
-                    if (verbose)
-                        printf("load: %s\n", t1);
-                } else if (strstr(t1, "S") != NULL) {
-                    if (verbose)
-                        printf("store: %s\n", t1);
-                } else if (strstr(t1, "M") != NULL) {
-                    if (verbose)
-                        printf("modify: %s\n", t1);
-                } else {
-                    while ((t2 = strsep(&t1, ","))) {
-                        // address
-                        if (verbose)
-                            printf("address & stuff: %s\n", t2);
+            if ((sscanf(line, " %c %u,%d", &instr, &address, &size)) == 3) {
+                if (instr == 'L') {
+                    if (check_hit(address)) {
+                        hit_count++;
+                    } else {
+                        miss_count++;
                     }
+                } else if (instr == 'S') {
+                    printf("store\n");
+                } else if (instr == 'M') {
+                    printf("modify\n");
                 }
+
+                check_hit(address);
+                printf("%s", line);
             }
         }
         fclose(file);
@@ -154,6 +155,22 @@ void free_cache(cache_t *cache) {
 
     free(cache->sets);
     free(cache);
+}
+
+int check_hit(unsigned address) {
+    int tagSize = 64 - s - b;
+    unsigned tag = address >> (64 - tagSize);
+    unsigned setIndex = address << tagSize >> (tagSize + b);
+
+    cacheset_t set =  cache->sets[setIndex];
+    for (int i = 0; i < set.num_lines; i++) {
+        line_t line = set.lines[i];
+        if (line.valid == 1 && line.tag == tag) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 void usage(void) 

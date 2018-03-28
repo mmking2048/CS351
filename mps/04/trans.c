@@ -30,11 +30,11 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
     else
         blockSize = 16;
 
-    for (int jj = 0; jj < N; jj += blockSize) {
-        for (int ii = 0; ii < M; ii += blockSize) {
+    for (int jj = 0; jj < M; jj += blockSize) {
+        for (int ii = 0; ii < N; ii += blockSize) {
             // transpose each block beginning at i, j
-            for (int i = ii; i < ii + blockSize; i++) {
-                for (int j = jj; j < jj + blockSize; j++) {
+            for (int i = ii; i < ii + blockSize && i < N; i++) {
+                for (int j = jj; j < jj + blockSize && j < M; j++) {
                     if (i != j)
                         B[j][i] = A[i][j];
                     else

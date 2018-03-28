@@ -23,7 +23,7 @@ char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
     int totalSize = 256; // equal to 2^5 blocks * 8 bits
-    int blockSize;
+    int blockSize, tmp;
 
     if (M == N)
         blockSize = totalSize / N;
@@ -35,8 +35,14 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
             // transpose each block beginning at i, j
             for (int i = ii; i < ii + blockSize; i++) {
                 for (int j = jj; j < jj + blockSize; j++) {
-                    B[j][i] = A[i][j];
+                    if (i != j)
+                        B[j][i] = A[i][j];
+                    else
+                        tmp = A[i][i];
                 }
+
+                if (ii == jj)
+                    B[i][i] = tmp;
             }
         }
     }

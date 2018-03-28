@@ -10,12 +10,12 @@
 typedef struct {
     int valid;
     long tag;
+    int lru;
 } line_t;
 
 typedef struct {
     int num_lines;
     line_t *lines;
-    int lru;
 } cacheset_t;
 
 typedef struct {
@@ -24,7 +24,7 @@ typedef struct {
 } cache_t;
 
 int verbose = 0;
-int s = 0, e = 0, b = 0;
+int s = 0, e = 0, b = 0, lineNum = 0;
 char *t = "";
 cache_t *cache;
 int hit_count = 0, miss_count = 0, eviction_count = 0;
@@ -79,8 +79,10 @@ int main(int argc, char **argv)
                 }
 
                 if (verbose)
-                        printf("\n");
+                    printf("\n");
             }
+
+            lineNum++;
         }
         fclose(file);
     }
@@ -140,10 +142,10 @@ cache_t *make_cache(int s, int e, int b) {
     for (int i = 0; i < cache->num_sets; i++) {
         cache->sets[i].num_lines = e;
         cache->sets[i].lines = malloc(sizeof(line_t) * e);
-        cache->sets[i].lru = -1;
 
         for (int j = 0; j < cache->sets[i].num_lines; j++) {
             cache->sets[i].lines[j].valid = 0;
+            cache->sets[i].lines[j].lru = 0;
         }
     }
 
@@ -174,7 +176,10 @@ int check_hit(unsigned long long int address) {
                 printf("hit ");
 
             hit_count++;
-            set->lru = i;
+            line->lru = lineNum;
+
+            printf("tag %u, set %u ", tag, setIndex);
+
             return 1;
         }
     }
@@ -185,28 +190,30 @@ int check_hit(unsigned long long int address) {
 
     miss_count++;
     load_line(tag, setIndex);
+
+    printf("tag %u, set %u", tag, setIndex);
     return 0;
 }
 
 void load_line(unsigned tag, unsigned setIndex) {
     cacheset_t *set = &(cache->sets[setIndex]);
+    int min = 0;
 
     for (int i = 0; i < set->num_lines; i++) {
-        if (i == set->lru && set->num_lines != 1)
-            continue;
-
-        if (set->lines[i].valid) {
-            // evicted
-            if (verbose)
-                printf("eviction ");
-            eviction_count++;
-        }
-
-        set->lines[i].tag = tag;
-        set->lines[i].valid = 1;
-        set->lru = i;
-        break;
+        if (set->lines[i].lru < set->lines[min].lru)
+        min = i;
     }
+
+    if (set->lines[min].valid) {
+        // evicted
+        if (verbose)
+            printf("eviction ");
+        eviction_count++;
+    }
+
+    set->lines[min].tag = tag;
+    set->lines[min].valid = 1;
+    set->lines[min].lru = lineNum;
 }
 
 void usage(void) 

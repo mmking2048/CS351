@@ -10,12 +10,12 @@
 typedef struct {
     int valid;
     long tag;
-    int lru;
 } line_t;
 
 typedef struct {
     int num_lines;
     line_t *lines;
+    int lru;
 } cacheset_t;
 
 typedef struct {
@@ -27,17 +27,17 @@ int verbose = 0;
 int s = 0, e = 0, b = 0;
 char *t = "";
 cache_t *cache;
+int hit_count = 0, miss_count = 0, eviction_count = 0;
 
 cache_t *make_cache(int s, int e, int b);
 void process_input(int argc, char **argv);
 void free_cache(cache_t* cache);
-int check_hit(unsigned address);
+int check_hit(unsigned long long int address);
+void load_line(unsigned tag, unsigned setIndex);
 void usage();
 
 int main(int argc, char **argv)
 {
-    int hit_count = 0, miss_count = 0, eviction_count = 0;
-
     process_input(argc, argv);
 
     // initialize and allocate cache
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     size_t len = 0;
     ssize_t read;
     char instr;
-    unsigned address;
+    unsigned long long int address;
     int size;
 
     file = fopen(t, "r");
@@ -68,21 +68,15 @@ int main(int argc, char **argv)
             if (verbose)
                 printf("%s ", line2);
 
-            if ((sscanf(line, " %c %u,%d", &instr, &address, &size)) == 3) {
+            if ((sscanf(line, " %c %llx,%d", &instr, &address, &size)) == 3) {
                 if (instr == 'L') {
-                    if (check_hit(address)) {
-                        hit_count++;
-                    } else {
-                        miss_count++;
-                    }
+                    check_hit(address);
                 } else if (instr == 'S') {
-                    printf("store\n");
+                    check_hit(address);
                 } else if (instr == 'M') {
-                    printf("modify\n");
+                    check_hit(address);
+                    check_hit(address);
                 }
-
-                check_hit(address);
-                printf("%s", line);
             }
         }
         fclose(file);
@@ -143,6 +137,10 @@ cache_t *make_cache(int s, int e, int b) {
     for (int i = 0; i < cache->num_sets; i++) {
         cache->sets[i].num_lines = e;
         cache->sets[i].lines = malloc(sizeof(line_t) * e);
+
+        for (int j = 0; j < cache->sets[i].num_lines; j++) {
+            cache->sets[i].lines[j].valid = 0;
+        }
     }
 
     return cache;
@@ -157,20 +155,72 @@ void free_cache(cache_t *cache) {
     free(cache);
 }
 
-int check_hit(unsigned address) {
-    int tagSize = 64 - s - b;
-    unsigned tag = address >> (64 - tagSize);
+int check_hit(unsigned long long int address) {
+    int tagSize = 64 - (s + b);
+    unsigned tag = address >> (s + b);
     unsigned setIndex = address << tagSize >> (tagSize + b);
 
     cacheset_t set =  cache->sets[setIndex];
     for (int i = 0; i < set.num_lines; i++) {
         line_t line = set.lines[i];
         if (line.valid == 1 && line.tag == tag) {
+            // hit
+            if (verbose)
+                printf("hit\n");
+
+            hit_count++;
+            set.lru = i;
             return 1;
         }
     }
 
+    // missed
+    if (verbose)
+        printf("miss ");
+
+    miss_count++;
+    load_line(tag, setIndex);
+
+    if (verbose)
+        printf("\n");
+
     return 0;
+}
+
+void load_line(unsigned tag, unsigned setIndex) {
+    cacheset_t set = cache->sets[setIndex];
+
+    for (int i = 0; i < set.num_lines; i++) {
+        line_t line = set.lines[i];
+
+        if (i == set.lru)
+            continue;
+
+        if (line.valid) {
+            // evicted
+            if (verbose)
+                printf("eviction ");
+            eviction_count++;
+        }
+
+        line.tag = tag;
+        line.valid = 1;
+        set.lru = i;
+        break;
+    }
+
+    // if got here, num_lines must be zero
+    // therefore we need to evict
+    if (set.lines[0].valid) {
+        // evicted
+        if (verbose)
+            printf("eviction ");
+        eviction_count++;
+    }
+
+    set.lines[0].tag = tag;
+    set.lines[0].valid = 1;
+    set.lru = 0;
 }
 
 void usage(void) 

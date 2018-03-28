@@ -169,16 +169,17 @@ int check_hit(unsigned long long int address) {
     unsigned tag = address >> (s + b);
     unsigned setIndex = address << tagSize >> (tagSize + b);
 
-    cacheset_t set =  cache->sets[setIndex];
-    for (int i = 0; i < set.num_lines; i++) {
-        line_t line = set.lines[i];
-        if (line.valid == 1 && line.tag == tag) {
+    cacheset_t *set =  &(cache->sets[setIndex]);
+
+    for (int i = 0; i < set->num_lines; i++) {
+        line_t *line = &(set->lines[i]);
+        if (line->valid == 1 && line->tag == tag) {
             // hit
             if (verbose)
                 printf("hit ");
 
             hit_count++;
-            set.lru = i;
+            set->lru = i;
             return 1;
         }
     }
@@ -193,22 +194,22 @@ int check_hit(unsigned long long int address) {
 }
 
 void load_line(unsigned tag, unsigned setIndex) {
-    cacheset_t set = cache->sets[setIndex];
+    cacheset_t *set = &(cache->sets[setIndex]);
 
-    for (int i = 0; i < set.num_lines; i++) {
-        if (i == set.lru && set.num_lines != 1)
+    for (int i = 0; i < set->num_lines; i++) {
+        if (i == set->lru && set->num_lines != 1)
             continue;
 
-        if (set.lines[i].valid) {
+        if (set->lines[i].valid) {
             // evicted
             if (verbose)
                 printf("eviction ");
             eviction_count++;
         }
 
-        set.lines[i].tag = tag;
-        set.lines[i].valid = 1;
-        set.lru = i;
+        set->lines[i].tag = tag;
+        set->lines[i].valid = 1;
+        set->lru = i;
         break;
     }
 }

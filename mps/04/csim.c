@@ -66,25 +66,20 @@ int main(int argc, char **argv)
             char *line2 = line;
 
             if (verbose)
-                printf("%s ", line2);
+                printf("%s ", strtok(line2, "\n"));
 
             if ((sscanf(line, " %c %llx,%d", &instr, &address, &size)) == 3) {
                 if (instr == 'L') {
                     check_hit(address);
-                    if (verbose)
-                        printf("\n");
-
                 } else if (instr == 'S') {
                     check_hit(address);
-                    if (verbose)
-                        printf("\n");
-
                 } else if (instr == 'M') {
                     check_hit(address);
                     check_hit(address);
-                    if (verbose)
-                        printf("\n");
                 }
+
+                if (verbose)
+                        printf("\n");
             }
         }
         fclose(file);

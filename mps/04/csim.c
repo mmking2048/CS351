@@ -71,11 +71,19 @@ int main(int argc, char **argv)
             if ((sscanf(line, " %c %llx,%d", &instr, &address, &size)) == 3) {
                 if (instr == 'L') {
                     check_hit(address);
+                    if (verbose)
+                        printf("\n");
+
                 } else if (instr == 'S') {
                     check_hit(address);
+                    if (verbose)
+                        printf("\n");
+
                 } else if (instr == 'M') {
                     check_hit(address);
                     check_hit(address);
+                    if (verbose)
+                        printf("\n");
                 }
             }
         }
@@ -137,6 +145,7 @@ cache_t *make_cache(int s, int e, int b) {
     for (int i = 0; i < cache->num_sets; i++) {
         cache->sets[i].num_lines = e;
         cache->sets[i].lines = malloc(sizeof(line_t) * e);
+        cache->sets[i].lru = -1;
 
         for (int j = 0; j < cache->sets[i].num_lines; j++) {
             cache->sets[i].lines[j].valid = 0;
@@ -166,7 +175,7 @@ int check_hit(unsigned long long int address) {
         if (line.valid == 1 && line.tag == tag) {
             // hit
             if (verbose)
-                printf("hit\n");
+                printf("hit ");
 
             hit_count++;
             set.lru = i;
@@ -180,10 +189,6 @@ int check_hit(unsigned long long int address) {
 
     miss_count++;
     load_line(tag, setIndex);
-
-    if (verbose)
-        printf("\n");
-
     return 0;
 }
 
@@ -191,36 +196,21 @@ void load_line(unsigned tag, unsigned setIndex) {
     cacheset_t set = cache->sets[setIndex];
 
     for (int i = 0; i < set.num_lines; i++) {
-        line_t line = set.lines[i];
-
-        if (i == set.lru)
+        if (i == set.lru && set.num_lines != 1)
             continue;
 
-        if (line.valid) {
+        if (set.lines[i].valid) {
             // evicted
             if (verbose)
                 printf("eviction ");
             eviction_count++;
         }
 
-        line.tag = tag;
-        line.valid = 1;
+        set.lines[i].tag = tag;
+        set.lines[i].valid = 1;
         set.lru = i;
         break;
     }
-
-    // if got here, num_lines must be zero
-    // therefore we need to evict
-    if (set.lines[0].valid) {
-        // evicted
-        if (verbose)
-            printf("eviction ");
-        eviction_count++;
-    }
-
-    set.lines[0].tag = tag;
-    set.lines[0].valid = 1;
-    set.lru = 0;
 }
 
 void usage(void) 
